@@ -47,7 +47,7 @@
   <p style="color:#666;margin-bottom:24px">Your GitHub activity, rendered as an 8-bit game map.</p>
 
   <div style="display:flex;gap:10px;margin-bottom:24px">
-    <input bind:value={username} on:keydown={(e) => e.key === "Enter" && fetchCommits()}
+    <input bind:value={username} onkeydown={(e) => e.key === "Enter" && fetchCommits()}
       placeholder="GitHub username" style="flex:1;padding:10px 16px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:monospace" />
     <button onclick={fetchCommits} disabled={loading}
       style="padding:10px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-weight:600;font-family:monospace">

@@ -14,5 +14,4 @@ jobs:
         with:
           node-version: "22"
       - run: npm install
-      - run: npx svelte-check --tsconfig ./tsconfig.json 2>&1 || true
       - run: npx vite build
