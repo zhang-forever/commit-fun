@@ -13,6 +13,7 @@
   const COLORS = [
     "#161b22", "#0e4429", "#006d32", "#26a641", "#39d353",
   ];
+  const COLOR_LABELS = ["Less", "", "", "", "More"];
 
   const TILE_SIZE = 13;
   const GAP = 3;
@@ -26,6 +27,58 @@
     if (count <= 5) return COLORS[2];
     if (count <= 10) return COLORS[3];
     return COLORS[4];
+  }
+
+  // --- Stats ---
+  let totalCommits = $derived(tiles.reduce((sum, t) => sum + t.count, 0));
+
+  let longestStreak = $derived(() => {
+    if (tiles.length === 0) return 0;
+    // Sort tiles by date
+    const sorted = [...tiles].sort((a, b) => a.date.localeCompare(b.date));
+    let maxStreak = 0;
+    let currentStreak = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i].count > 0) {
+        if (i === 0) {
+          currentStreak = 1;
+        } else {
+          const prev = new Date(sorted[i - 1].date);
+          const curr = new Date(sorted[i].date);
+          const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+          if (diff === 1 && sorted[i - 1].count > 0) {
+            currentStreak++;
+          } else {
+            currentStreak = 1;
+          }
+        }
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else {
+        currentStreak = 0;
+      }
+    }
+    return maxStreak;
+  });
+
+  let mostActiveDay = $derived(() => {
+    if (tiles.length === 0) return "N/A";
+    let max = 0;
+    let day = "N/A";
+    for (const t of tiles) {
+      if (t.count > max) {
+        max = t.count;
+        day = t.date;
+      }
+    }
+    return day;
+  });
+
+  function downloadPNG() {
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = `commit-fun-${username || "map"}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
   }
 
   function drawMap() {
@@ -270,9 +323,43 @@
       onmouseleave={() => { hoveredTile = null; drawMap(); }}
       style="border:1px solid #e0e0e0;border-radius:8px;outline:none;cursor:crosshair"
     ></canvas>
-    <p style="color:#999;font-size:11px;margin-top:8px">
-      Click tiles or use ←→↑↓ to navigate. Darker = more activity.
-    </p>
+
+    <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+      <p style="color:#999;font-size:11px;margin:0">
+        Click tiles or use ←→↑↓ to navigate. Darker = more activity.
+      </p>
+      <button onclick={downloadPNG}
+        style="padding:4px 12px;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:6px;font-size:11px;font-family:monospace;cursor:pointer;margin-left:auto">
+        ⬇ Download PNG
+      </button>
+    </div>
+
+    <!-- Heatmap Legend -->
+    <div style="display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:#666">
+      <span>Less</span>
+      {#each COLORS as color, i}
+        <div style="width:13px;height:13px;background:{color};border-radius:2px;border:1px solid #e0e0e0"></div>
+      {/each}
+      <span>More</span>
+    </div>
+
+    <!-- Stats Panel -->
+    <div style="display:flex;gap:24px;margin-top:16px;padding:16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Total Commits</span>
+        <span style="font-weight:700;font-size:20px;color:#111827">{totalCommits}</span>
+      </div>
+      <div style="width:1px;background:#e5e7eb"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Longest Streak</span>
+        <span style="font-weight:700;font-size:20px;color:#111827">{longestStreak()} days</span>
+      </div>
+      <div style="width:1px;background:#e5e7eb"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Most Active Day</span>
+        <span style="font-weight:700;font-size:14px;color:#111827">{mostActiveDay()}</span>
+      </div>
+    </div>
   {:else if !loading && !error && username.trim()}
     <p style="color:#666">No events found for @{username}.</p>
   {/if}
