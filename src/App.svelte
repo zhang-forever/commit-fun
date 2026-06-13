@@ -21,6 +21,7 @@
   const OFFSET_Y = 16;
   const COLS = 53;
 
+  /** Map a commit count to a color bucket (0–4 scale). */
   function getColor(count: number): string {
     if (count === 0) return COLORS[0];
     if (count <= 2) return COLORS[1];
@@ -73,6 +74,7 @@
     return day;
   });
 
+  /** Download the canvas heatmap as a PNG image. */
   function downloadPNG() {
     if (!canvas) return;
     const link = document.createElement("a");
@@ -81,6 +83,7 @@
     link.click();
   }
 
+  /** Render the entire heatmap, tooltip, and labels onto the canvas. */
   function drawMap() {
     if (!ctx || !canvas) return;
     const w = canvas.width;
@@ -142,6 +145,7 @@
     ctx.fillText(`@${username}`, OFFSET_X, Math.min(labelY, h - 12));
   }
 
+  /** Fetch public GitHub events for a user and build the heatmap tile data. */
   async function fetchCommits() {
     if (!username.trim()) return;
     loading = true;
@@ -188,6 +192,7 @@
     loading = false;
   }
 
+  /** Handle arrow-key / Home / End navigation over tiles. */
   function handleKeydown(e: KeyboardEvent) {
     if (tiles.length === 0) return;
     const maxIdx = tiles.length - 1;
@@ -229,6 +234,7 @@
     drawMap();
   }
 
+  /** Handle click events on the canvas to select a tile. */
   function handleCanvasClick(e: MouseEvent) {
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -251,6 +257,7 @@
     drawMap();
   }
 
+  /** Handle mouse-move events on the canvas for hover tooltip. */
   function handleCanvasMove(e: MouseEvent) {
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
